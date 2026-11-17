@@ -1,0 +1,38 @@
+name: Build and Release
+
+# Manual only - this workflow is never triggered by pushes or tags.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (for example v1.0.0)
+        required: true
+        default: v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSVC x64
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build cl.exe
+        run: |
+          mkdir build
+          cl.exe /nologo /std:c++17 /EHsc /O2 /MD /Fe:build\cl.exe cl.cpp
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: cl ${{ inputs.tag }}
+          files: build/cl.exe
+          generate_release_notes: true
